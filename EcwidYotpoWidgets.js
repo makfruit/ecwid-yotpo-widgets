@@ -81,9 +81,8 @@ var EcwidYotpoWidgets = (function(module) {
       _activeWidgets[i].show(pageInfo);
     }
 
-    //setTimeout(function(){window.yQuery(".yotpo").yotpo();}, 3000); // pdbg
+    // Initialize Yotpo
     window.yQuery(".yotpo").yotpo();
-    //var i = 0;
   }
 
   /*
@@ -91,7 +90,6 @@ var EcwidYotpoWidgets = (function(module) {
    */
   function _hideProductPageWidgets() { // dbg naming
     // Hide widgets
-    var dbg = 'i';
     for (var i = 0; i < _activeWidgets.length; i++) {
       _activeWidgets[i].hide();
     }
@@ -274,12 +272,10 @@ EcwidYotpoWidgets.EcwidApi = (function(module) {
       'models': "", // no such data
       'id': ecwidPage.productId,
       'domain': document.domain, 
-      'url': "http://localhost/yo/yo/yo?var=val&var2=val2#!hashbangpart/~/category",
-      //'url': window.location.href,
+      'url': window.location.href,
       'breadcrumbs': _getBreadcrumbs()
     };   
     return data;
-
   }
 
   var _getBreadcrumbs = function() {   
@@ -407,9 +403,6 @@ EcwidYotpoWidgets.WidgetsFactory = (function(module) {
       EcwidYotpoWidgets.Log.wrn(EcwidYotpoWidgets.Messages.WRN_BAD_WIDGET_TYPE);
       return false;
     }
-
-    //var _widgetConfig = config[type];
-    //_widgetConfig.yotpoAppKey = config.yotpoAppKey;
 
     switch(type) {
       case EcwidYotpoWidgets.WIDGET_TYPES.reviews:
