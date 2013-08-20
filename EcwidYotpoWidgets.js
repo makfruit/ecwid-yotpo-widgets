@@ -349,8 +349,8 @@ EcwidYotpoWidgets.Widget = (function(module) {
       "data-product-id": pageInfo.id,
       "data-product-models": pageInfo.models,
       "data-name": this.escapeText(pageInfo.title),
-      //"data-url": encodeURIComponent(pageInfo.url),      
-      "data-url": pageInfo.url,
+      "data-url": encodeURIComponent(pageInfo.url),      
+      //"data-url": pageInfo.url,
       "data-image-url": encodeURIComponent(pageInfo.imageUrl),
       "data-description": this.escapeText(pageInfo.descr),
       "data-bread-crumbs": this.escapeText(pageInfo.breadcrumbs)
