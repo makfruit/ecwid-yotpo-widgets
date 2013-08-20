@@ -351,7 +351,8 @@ EcwidYotpoWidgets.Widget = (function(module) {
       "data-name": this.escapeText(pageInfo.title),
       //"data-url": encodeURIComponent(pageInfo.url),      
       "data-url": pageInfo.url,
-      "data-image-url": encodeURIComponent(pageInfo.imageUrl),
+      //"data-image-url": encodeURIComponent(pageInfo.imageUrl),
+      "data-image-url": pageInfo.imageUrl,
       "data-description": this.escapeText(pageInfo.descr),
       "data-bread-crumbs": this.escapeText(pageInfo.breadcrumbs)
     });
