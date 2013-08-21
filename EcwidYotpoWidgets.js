@@ -88,7 +88,7 @@ var EcwidYotpoWidgets = (function(module) {
   /*
    * Prepare and show widgets on the current page
    */
-  function _hideProductPageWidgets() { // dbg naming
+  function _hideProductPageWidgets() {
     // Hide widgets
     for (var i = 0; i < _activeWidgets.length; i++) {
       _activeWidgets[i].hide();
@@ -278,6 +278,9 @@ EcwidYotpoWidgets.EcwidApi = (function(module) {
     return data;
   }
 
+  /*
+   * Find and get breadcrumbs (navigation line) on product page
+   */
   var _getBreadcrumbs = function() {   
     var categories = [];
     jQuery('div.ecwid-productBrowser-categoryPath-categoryLink:not(.ecwid-productBrowser-categoryPath-storeLink)').each(
@@ -332,31 +335,34 @@ EcwidYotpoWidgets.EcwidApi = (function(module) {
 })(EcwidYotpoWidgets.EcwidApi || {});
 
 /*
- * EcwidYotpoWidgets.Widget module: Abstract Widget (as a cached mixin)
+ * EcwidYotpoWidgets.Widget module: Abstract Widget
  */
 EcwidYotpoWidgets.Widget = (function(module) {  
 
   module.createHTMLContainer = function(pageInfo) {    
     // Here, 'this' refers to child class    
-    // jQuery('#' + this.widgetConfig.elmId).remove();    
 
-    var elm = jQuery("<div/>");
-    elm.attr({
+    // Prepare data attributes for the widget's HTML element
+    // Basic information
+    var elmAttributes = {
       "id": this.widgetConfig.elmId,
-      "class": this.widgetConfig.elmCssClass,
+      "class": this.widgetConfig.elmCssClass + " " + this.widgetConfig.elmExtraCssClass,
       "data-appkey": this.globalConfig.yotpoAppKey,
       "data-domain": pageInfo.domain,
       "data-product-id": pageInfo.id,
       "data-product-models": pageInfo.models,
       "data-name": this.escapeText(pageInfo.title),
-      //"data-url": encodeURIComponent(pageInfo.url),      
       "data-url": pageInfo.url,
-      //"data-image-url": encodeURIComponent(pageInfo.imageUrl),
       "data-image-url": pageInfo.imageUrl,
       "data-description": this.escapeText(pageInfo.descr),
       "data-bread-crumbs": this.escapeText(pageInfo.breadcrumbs)
-    });
-    elm.insertAfter(this.widgetConfig.elmParentSelector);
+    };
+
+    // Advanced information. For the details, see http://support.yotpo.com/entries/21732922-Advanced-Widget-Customization    
+    EcwidYotpoWidgets.extend(elmAttributes, this.widgetConfig.advancedAttributes);    
+    
+    // Create an empty div with defined attributes and insert it into the current page
+    jQuery("<div/>", elmAttributes).insertAfter(this.widgetConfig.elmParentSelector);
   }
 
   module.removeHTMLContainer = function() {
@@ -369,11 +375,6 @@ EcwidYotpoWidgets.Widget = (function(module) {
 
   module.escapeText = function(text) {    
     return EcwidYotpoWidgets.EcwidApi.truncateProductDescription(text, this.globalConfig.productDescrMaxLength);
-  }
-
-  // dbg remove
-  module.encodeHtml = function(value) {
-    return jQuery('<div/>').text(value || '').html();
   }
 
   /*
@@ -391,6 +392,47 @@ EcwidYotpoWidgets.Widget = (function(module) {
   return mixin;
   
 })(EcwidYotpoWidgets.Widget || {});
+
+/*
+ * EcwidYotpoWidgets.ReiewsWidget module: Yotpo Reviews Widget (extends Widget)
+ */
+EcwidYotpoWidgets.ReiewsWidget = function(config) {
+  this.widgetType = 'reviews';
+  this.globalConfig = config;
+  this.widgetConfig = config[this.widgetType];
+
+  var that = this;
+  this.show = function(pageInfo) {
+    that.removeHTMLContainer();
+    that.createHTMLContainer(pageInfo);    
+  }
+
+  this.hide = function() {
+    that.removeHTMLContainer();
+  }
+}
+EcwidYotpoWidgets.Widget.call(EcwidYotpoWidgets.ReiewsWidget.prototype);
+
+/*
+ * EcwidYotpoWidgets.BottomlineWidget module: Yotpo Bottom Line Widget (extends Widget)
+ */
+EcwidYotpoWidgets.BottomlineWidget = function(config) {
+  this.widgetType = 'bottomline';
+  this.globalConfig = config;
+  this.widgetConfig = config[this.widgetType];
+
+  var that = this;
+  this.show = function(pageInfo) {
+    that.removeHTMLContainer();
+    that.createHTMLContainer(pageInfo);    
+  }
+
+  this.hide = function() {
+    that.removeHTMLContainer();
+  }
+}
+EcwidYotpoWidgets.Widget.call(EcwidYotpoWidgets.BottomlineWidget.prototype);
+
 
 /*
  * EcwidYotpoWidgets.WidgetsFactory module: Factory of widgets
@@ -427,47 +469,6 @@ EcwidYotpoWidgets.WidgetsFactory = (function(module) {
   );
 
 })(EcwidYotpoWidgets.WidgetsFactory || {});
-
-
-/*
- * EcwidYotpoWidgets.ReiewsWidget module: Reviews Widget (extends Widget)
- */
-EcwidYotpoWidgets.ReiewsWidget = function(config) {
-  this.widgetType = 'reviews';
-  this.globalConfig = config;
-  this.widgetConfig = config[this.widgetType];
-
-  var that = this;
-  this.show = function(pageInfo) {
-    that.removeHTMLContainer();
-    that.createHTMLContainer(pageInfo);    
-  }
-
-  this.hide = function() {
-    that.removeHTMLContainer();
-  }
-}
-EcwidYotpoWidgets.Widget.call(EcwidYotpoWidgets.ReiewsWidget.prototype);
-
-/*
- * EcwidYotpoWidgets.BottomlineWidget module: Share Widget (extends Widget)
- */
-EcwidYotpoWidgets.BottomlineWidget = function(config) {
-  this.widgetType = 'bottomline';
-  this.globalConfig = config;
-  this.widgetConfig = config[this.widgetType];
-
-  var that = this;
-  this.show = function(pageInfo) {
-    that.removeHTMLContainer();
-    that.createHTMLContainer(pageInfo);    
-  }
-
-  this.hide = function() {
-    that.removeHTMLContainer();
-  }
-}
-EcwidYotpoWidgets.Widget.call(EcwidYotpoWidgets.BottomlineWidget.prototype);
 
 
 /*
@@ -588,7 +589,6 @@ EcwidYotpoWidgets.WIDGET_TYPES = (function(module) {
 
 /*
  * EcwidYotpoWidgets.DefaultConfig module: widgets' default settings.
- * 
  */
 EcwidYotpoWidgets.DefaultConfig = (function(module) {
   var _config = {
@@ -599,14 +599,18 @@ EcwidYotpoWidgets.DefaultConfig = (function(module) {
       enabled: true,
       elmId: "ecwid_yotpo_reviews",      
       elmParentSelector: "div.ecwid", // widget's parent DOM element
-      elmCssClass: "yotpo reviews"
+      elmCssClass: "yotpo reviews",
+      elmExtraCssClass: "",
+      advancedAttributes: {} // The list of custom data attributes
     },
 
     bottomline: {
       enabled: true,
       elmId: "ecwid_yotpo_bottomline",        
       elmParentSelector: ".ecwid-productBrowser-head", // widget's parent DOM element
-      elmCssClass: "yotpo bottomLine"
+      elmCssClass: "yotpo bottomLine",
+      elmExtraCssClass: "",
+      advancedAttributes: {} // The list of custom data attributes
     }    
   }
 
