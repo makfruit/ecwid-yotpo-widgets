@@ -360,9 +360,11 @@ EcwidYotpoWidgets.Widget = (function(module) {
 
     // Advanced information. For the details, see http://support.yotpo.com/entries/21732922-Advanced-Widget-Customization    
     EcwidYotpoWidgets.extend(elmAttributes, this.widgetConfig.advancedAttributes);    
-    
-    // Create an empty div with defined attributes and insert it into the current page
-    jQuery("<div/>", elmAttributes).insertAfter(this.widgetConfig.elmParentSelector);
+  
+    // Create an empty div with the defined above attributes
+    var widgetElement = jQuery("<div/>", elmAttributes);
+
+    return widgetElement;  
   }
 
   module.removeHTMLContainer = function() {
@@ -404,7 +406,21 @@ EcwidYotpoWidgets.ReiewsWidget = function(config) {
   var that = this;
   this.show = function(pageInfo) {
     that.removeHTMLContainer();
-    that.createHTMLContainer(pageInfo);    
+    var widgetElement = that.createHTMLContainer(pageInfo);
+
+    // Find the element which the reviews widget should be placed after
+    var parentElement;
+    if (this.widgetConfig.elmParentSelector) {
+      // Parent element is set in the config
+      parentElement = jQuery(that.widgetConfig.elmParentSelector);
+
+    } else {
+      // Find the closest product browser's wrapper with 'ecwid' class
+      parentElement = jQuery("." + that.globalConfig.ecwidProductBrowserCssClass).closest('.ecwid');
+    }
+
+    // Insert widget's container into the current page
+    widgetElement.insertAfter(parentElement);
   }
 
   this.hide = function() {
@@ -424,7 +440,8 @@ EcwidYotpoWidgets.BottomlineWidget = function(config) {
   var that = this;
   this.show = function(pageInfo) {
     that.removeHTMLContainer();
-    that.createHTMLContainer(pageInfo);    
+    var widgetElement = that.createHTMLContainer(pageInfo);
+    widgetElement.insertAfter(that.widgetConfig.elmParentSelector);
   }
 
   this.hide = function() {
@@ -591,14 +608,15 @@ EcwidYotpoWidgets.WIDGET_TYPES = (function(module) {
  * EcwidYotpoWidgets.DefaultConfig module: widgets' default settings.
  */
 EcwidYotpoWidgets.DefaultConfig = (function(module) {
-  var _config = {
+  var _config = {    
     yotpoAppKey: '',
     productDescrMaxLength: 300,
+    ecwidProductBrowserCssClass: "ecwid-productBrowser",
 
     reviews: {
       enabled: true,
       elmId: "ecwid_yotpo_reviews",      
-      elmParentSelector: "div.ecwid", // widget's parent DOM element
+      elmParentSelector: false, // widget's parent DOM element
       elmCssClass: "yotpo reviews",
       elmExtraCssClass: "",
       advancedAttributes: {} // The list of custom data attributes
