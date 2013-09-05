@@ -396,9 +396,9 @@ EcwidYotpoWidgets.Widget = (function(module) {
 })(EcwidYotpoWidgets.Widget || {});
 
 /*
- * EcwidYotpoWidgets.ReiewsWidget module: Yotpo Reviews Widget (extends Widget)
+ * EcwidYotpoWidgets.ReviewsWidget module: Yotpo Reviews Widget (extends Widget)
  */
-EcwidYotpoWidgets.ReiewsWidget = function(config) {
+EcwidYotpoWidgets.ReviewsWidget = function(config) {
   this.widgetType = 'reviews';
   this.globalConfig = config;
   this.widgetConfig = config[this.widgetType];
@@ -427,7 +427,7 @@ EcwidYotpoWidgets.ReiewsWidget = function(config) {
     that.removeHTMLContainer();
   }
 }
-EcwidYotpoWidgets.Widget.call(EcwidYotpoWidgets.ReiewsWidget.prototype);
+EcwidYotpoWidgets.Widget.call(EcwidYotpoWidgets.ReviewsWidget.prototype);
 
 /*
  * EcwidYotpoWidgets.BottomlineWidget module: Yotpo Bottom Line Widget (extends Widget)
@@ -466,7 +466,7 @@ EcwidYotpoWidgets.WidgetsFactory = (function(module) {
 
     switch(type) {
       case EcwidYotpoWidgets.WIDGET_TYPES.reviews:
-        return new EcwidYotpoWidgets.ReiewsWidget(config);
+        return new EcwidYotpoWidgets.ReviewsWidget(config);
         break;
 
       case EcwidYotpoWidgets.WIDGET_TYPES.bottomline:
@@ -474,7 +474,7 @@ EcwidYotpoWidgets.WidgetsFactory = (function(module) {
         break;
      
       default:
-        return new EcwidYotpoWidgets.ReiewsWidget(config);
+        return new EcwidYotpoWidgets.ReviewsWidget(config);
     }
   }
 
