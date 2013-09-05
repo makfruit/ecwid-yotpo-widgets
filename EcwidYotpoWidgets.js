@@ -1,6 +1,9 @@
 /*
  * A script for Ecwid to display Yotpo widgets on product details pages
- * https://github.com/makfruit/ecwid_yotpo_widgets/
+ *
+ * Project web page: https://github.com/makfruit/ecwid_yotpo_widgets/
+ * Ecwid shopping cart: http://www.ecwid.com
+ * Yotpo reviews: http://www.yotpo.com
  *
  */
 
