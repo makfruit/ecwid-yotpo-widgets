@@ -293,7 +293,7 @@ EcwidYotpoWidgets.EcwidApi = (function(module) {
         categories.push(jQuery(this).text());
       }
     );
-    var separator = jQuery('span.ecwid-productBrowser-categoryPath-separator').first().text();
+    var separator = jQuery('span.ecwid-productBrowser-categoryPath-separator:first').text();
     var breadcrumbs = categories.join(separator);
     return breadcrumbs;
   }
@@ -367,7 +367,7 @@ EcwidYotpoWidgets.Widget = (function(module) {
     EcwidYotpoWidgets.extend(elmAttributes, this.widgetConfig.advancedAttributes);    
   
     // Create an empty div with the defined above attributes
-    var widgetElement = jQuery("<div/>", elmAttributes);
+    var widgetElement = jQuery("<div/>").attr(elmAttributes);
 
     return widgetElement;  
   }
