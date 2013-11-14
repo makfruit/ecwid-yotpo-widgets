@@ -1,4 +1,6 @@
 /*
+ * Ecwid Yotpo Widgets v0.2beta
+ * 
  * A script for Ecwid to display Yotpo widgets on product details pages
  *
  * Project web page: https://github.com/makfruit/ecwid_yotpo_widgets/
@@ -91,7 +93,7 @@ var EcwidYotpoWidgets = (function(module) {
   }
 
   /*
-   * Prepare and show widgets on the current page
+   * Hide widgets on the current page
    */
   function _hideProductPageWidgets() {
     // Hide widgets
@@ -130,7 +132,7 @@ var EcwidYotpoWidgets = (function(module) {
 
       // Attach widgets appearing to Ecwid page loading
       EcwidYotpoWidgets.EcwidApi.attachPageLoadedHandler(_hideProductPageWidgets);
-      EcwidYotpoWidgets.EcwidApi.attachProductPageLoadedHandler(_showProductPageWidgets);
+      EcwidYotpoWidgets.EcwidApi.attachPageLoadedHandler(_showProductPageWidgets, 'PRODUCT');
     }
   }
 
@@ -299,30 +301,25 @@ EcwidYotpoWidgets.EcwidApi = (function(module) {
   }
 
   /*
-   * Assign a handler to the Ecwid.OnPageLoaded event
+   * Attach a handler to Ecwid.OnPageLoaded event
    */
-  var _attachPageLoadedHandler = function(callback) {
-    Ecwid.OnPageLoaded.add(function(page) {      
-      callback(page);
-    });
-  }
+  var _attachPageLoadedHandler = function(callback, pageType) {
+    var handler;    
+    if (pageType) {
+      handler = function(page) {
+        if (page.type == pageType) {
+          callback(page);
+        }
+      };
 
-  /*
-   * Assign a handler to the Ecwid.OnPageLoaded event
-   */
-  var _attachProductPageLoadedHandler = function(callback) {
+    } else {
+      handler = function(page) {
+        callback(page);
+      };
+    }
+    
     Ecwid.OnPageLoaded.add(function(page) {
-      if (
-        typeof (page) == 'object'
-        && 'PRODUCT' == page.type
-      ) {
-        setTimeout(
-          function() {            
-            callback(page);
-          },
-          200 // workaround for Ecwid onPageLoaded early firing
-        );
-      }
+      handler(page);      
     });
   }
 
@@ -331,7 +328,6 @@ EcwidYotpoWidgets.EcwidApi = (function(module) {
     module,
     {
       attachPageLoadedHandler: _attachPageLoadedHandler,
-      attachProductPageLoadedHandler: _attachProductPageLoadedHandler,
       truncateProductDescription: _truncateProductDescription,
       getEcwidProductPageInfo: _getEcwidProductPageInfo
     }
