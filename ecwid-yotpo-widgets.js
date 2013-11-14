@@ -431,10 +431,10 @@ EcwidYotpoWidgets.ReviewsWidget = function(config) {
 EcwidYotpoWidgets.Widget.call(EcwidYotpoWidgets.ReviewsWidget.prototype);
 
 /*
- * EcwidYotpoWidgets.BottomlineWidget module: Yotpo Bottom Line Widget (extends Widget)
+ * EcwidYotpoWidgets.RatingWidget module: Yotpo Star Rating (Bottom Line) Widget (extends Widget)
  */
-EcwidYotpoWidgets.BottomlineWidget = function(config) {
-  this.widgetType = 'bottomline';
+EcwidYotpoWidgets.RatingWidget = function(config) {
+  this.widgetType = 'rating';
   this.globalConfig = config;
   this.widgetConfig = config[this.widgetType];
 
@@ -449,7 +449,7 @@ EcwidYotpoWidgets.BottomlineWidget = function(config) {
     that.removeHTMLContainer();
   }
 }
-EcwidYotpoWidgets.Widget.call(EcwidYotpoWidgets.BottomlineWidget.prototype);
+EcwidYotpoWidgets.Widget.call(EcwidYotpoWidgets.RatingWidget.prototype);
 
 
 /*
@@ -470,8 +470,8 @@ EcwidYotpoWidgets.WidgetsFactory = (function(module) {
         return new EcwidYotpoWidgets.ReviewsWidget(config);
         break;
 
-      case EcwidYotpoWidgets.WIDGET_TYPES.bottomline:
-        return new EcwidYotpoWidgets.BottomlineWidget(config);
+      case EcwidYotpoWidgets.WIDGET_TYPES.rating:
+        return new EcwidYotpoWidgets.RatingWidget(config);
         break;
      
       default:
@@ -598,7 +598,7 @@ EcwidYotpoWidgets.Log.Console = (function(module) {
 EcwidYotpoWidgets.WIDGET_TYPES = (function(module) {
   var _module = {    
     reviews: "reviews",
-    bottomline: "bottomline"
+    rating: "rating"
   }
 
   return (EcwidYotpoWidgets.extend(module, _module, true));
@@ -623,14 +623,14 @@ EcwidYotpoWidgets.DefaultConfig = (function(module) {
       advancedAttributes: {} // The list of custom data attributes
     },
 
-    bottomline: {
+    rating: {
       enabled: true,
-      elmId: "ecwid_yotpo_bottomline",        
+      elmId: "ecwid_yotpo_rating",        
       elmParentSelector: ".ecwid-productBrowser-head", // widget's parent DOM element
       elmCssClass: "yotpo bottomLine",
       elmExtraCssClass: "",
       advancedAttributes: {} // The list of custom data attributes
-    }    
+    }
   }
 
   return (EcwidYotpoWidgets.extend(module, _config, true));
