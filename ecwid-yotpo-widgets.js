@@ -79,13 +79,16 @@ var EcwidYotpoWidgets = (function(module) {
   /*
    * Prepare and show widgets on the current page
    */
-  function _showProductPageWidgets(ecwidPage) {
-    // Get the product information
-    var pageInfo = EcwidYotpoWidgets.EcwidApi.getEcwidProductPageInfo(ecwidPage);
+  function _showWidgets(ecwidPage) {    
+    // Get the current page information    
+    pageInfo = EcwidYotpoWidgets.EcwidApi.getEcwidPageInfo(ecwidPage);
 
     // Show widgets
+    console.debug(_activeWidgets);    
     for (var i = 0; i < _activeWidgets.length; i++) {
-      _activeWidgets[i].show(pageInfo);
+      if (_activeWidgets[i].isDisplayedOnPage(pageInfo.type)) {        
+        _activeWidgets[i].show(pageInfo);
+      }
     }
 
     // Initialize Yotpo
@@ -95,7 +98,7 @@ var EcwidYotpoWidgets = (function(module) {
   /*
    * Hide widgets on the current page
    */
-  function _hideProductPageWidgets() {
+  function _hideWidgets() {
     // Hide widgets
     for (var i = 0; i < _activeWidgets.length; i++) {
       _activeWidgets[i].hide();
@@ -107,7 +110,7 @@ var EcwidYotpoWidgets = (function(module) {
    *   - create widget objects,
    *   - attach event handlers
    */
-  function _start() {
+  function _start() {    
     // Create widget objects
     for (var widgetType in EcwidYotpoWidgets.WIDGET_TYPES) {
       if (_config[widgetType].enabled) {
@@ -131,8 +134,9 @@ var EcwidYotpoWidgets = (function(module) {
       ).prependTo("body");
 
       // Attach widgets appearing to Ecwid page loading
-      EcwidYotpoWidgets.EcwidApi.attachPageLoadedHandler(_hideProductPageWidgets);
-      EcwidYotpoWidgets.EcwidApi.attachPageLoadedHandler(_showProductPageWidgets, 'PRODUCT');
+      EcwidYotpoWidgets.EcwidApi.attachPageLoadedHandler(_hideWidgets);
+      EcwidYotpoWidgets.EcwidApi.attachPageLoadedHandler(_showWidgets, ['PRODUCT','CATEGORY']);
+      //EcwidYotpoWidgets.EcwidApi.attachPageLoadedHandler(_showProductListPageWidgets, 'CATEGORY');
     }
   }
 
@@ -271,18 +275,27 @@ EcwidYotpoWidgets.EcwidApi = (function(module) {
   /* 
    * Parse the page source and get the product information
    */
-  var _getEcwidProductPageInfo = function(ecwidPage) {
-    var data = {
-      'imageUrl': jQuery('.ecwid-productBrowser-details-thumbnail > img').attr('src'),      
-      'title': jQuery('.ecwid-productBrowser-head').text(),
-      'descr': jQuery('.ecwid-productBrowser-details-descr').text(),
-      'models': "", // no such data
-      'id': ecwidPage.productId,
-      'domain': document.domain, 
-      'url': window.location.href,
-      'breadcrumbs': _getBreadcrumbs()
-    };   
-    return data;
+  var _getEcwidPageInfo = function(ecwidPage) {
+    var pageData = {};
+    switch(ecwidPage.type) {
+      case 'PRODUCT':
+        pageData = {
+          'imageUrl': jQuery('.ecwid-productBrowser-details-thumbnail > img').attr('src'),      
+          'title': jQuery('.ecwid-productBrowser-head').text(),
+          'descr': jQuery('.ecwid-productBrowser-details-descr').text(),
+          'models': "", // no such data
+          'id': ecwidPage.productId,
+          'domain': document.domain, 
+          'url': window.location.href,
+          'breadcrumbs': _getBreadcrumbs()
+        }; 
+        break; 
+
+      default:
+        break; 
+    }
+    
+    return EcwidYotpoWidgets.extend(ecwidPage, pageData);
   }
 
   /*
@@ -303,11 +316,14 @@ EcwidYotpoWidgets.EcwidApi = (function(module) {
   /*
    * Attach a handler to Ecwid.OnPageLoaded event
    */
-  var _attachPageLoadedHandler = function(callback, pageType) {
+  var _attachPageLoadedHandler = function(callback, pageType) {    
     var handler;    
     if (pageType) {
+      if (!jQuery.isArray(pageType)) {
+        pageType = new Array(pageType);
+      }
       handler = function(page) {
-        if (page.type == pageType) {
+        if (jQuery.inArray(page.type, pageType) > -1) {
           callback(page);
         }
       };
@@ -329,7 +345,7 @@ EcwidYotpoWidgets.EcwidApi = (function(module) {
     {
       attachPageLoadedHandler: _attachPageLoadedHandler,
       truncateProductDescription: _truncateProductDescription,
-      getEcwidProductPageInfo: _getEcwidProductPageInfo
+      getEcwidPageInfo: _getEcwidPageInfo
     }
   ));
 
@@ -338,7 +354,11 @@ EcwidYotpoWidgets.EcwidApi = (function(module) {
 /*
  * EcwidYotpoWidgets.Widget module: Abstract Widget
  */
-EcwidYotpoWidgets.Widget = (function(module) {  
+EcwidYotpoWidgets.Widget = (function(module) { 
+
+  module.isDisplayedOnPage = function(pageType) {
+    return (jQuery.inArray(pageType, this.widgetConfig.pages) > -1);
+  }
 
   module.createHTMLContainer = function(pageInfo) {    
     // Here, 'this' refers to child class    
@@ -347,7 +367,7 @@ EcwidYotpoWidgets.Widget = (function(module) {
     // Basic information
     var elmAttributes = {
       "id": this.widgetConfig.elmId,
-      "class": this.widgetConfig.elmCssClass + " " + this.widgetConfig.elmExtraCssClass,
+      "class": this.getCssClass(),
       "data-appkey": this.globalConfig.yotpoAppKey,
       "data-domain": pageInfo.domain,
       "data-product-id": pageInfo.id,
@@ -370,6 +390,10 @@ EcwidYotpoWidgets.Widget = (function(module) {
 
   module.removeHTMLContainer = function() {
     jQuery('#' + this.widgetConfig.elmId).remove(); 
+  }
+
+  module.getCssClass = function () {
+    return this.widgetConfig.elmCssClass + " " + this.widgetConfig.elmExtraCssClass;
   }
 
   module.escapeUrl = function(url) {
@@ -453,6 +477,53 @@ EcwidYotpoWidgets.Widget.call(EcwidYotpoWidgets.RatingWidget.prototype);
 
 
 /*
+ * EcwidYotpoWidgets.RatingListWidget module: Yotpo Star Rating (Bottom Line) Widgets for product list (extends Widget)
+ */
+EcwidYotpoWidgets.RatingListWidget = function(config) {
+  this.widgetType = 'ratinglist';
+  this.globalConfig = config;
+  this.widgetConfig = config[this.widgetType];
+
+  /*
+   * Remove widget HTML containers [override]
+   */
+  this.removeHTMLContainer = function() {
+    jQuery("[class='" + this.getCssClass() + "']").remove();  // dbg    
+  }
+
+  var that = this;
+  this.show = function(pageInfo) {    
+    jQuery("div.ecwid-productBrowser-productNameLink").each(function() { // dbg const
+      // Get product ID from the link      
+      var productID = jQuery(this).find('a').attr('href').match(/id=(\d+)/)[1];
+
+      //
+      // Prepare data attributes for the widget's HTML element
+      // Basic information
+      var elmAttributes = { // dbg code duplicate
+        "class": that.getCssClass(),
+        "data-appkey": that.globalConfig.yotpoAppKey,        
+        "data-product-id": productID
+      };
+
+      // Advanced information. For the details, see http://support.yotpo.com/entries/21732922-Advanced-Widget-Customization    
+      EcwidYotpoWidgets.extend(elmAttributes, that.widgetConfig.advancedAttributes);    
+    
+      // Create an HTML container for star rating
+      var widget = jQuery("<div/>").attr(elmAttributes);
+      widget.insertAfter(jQuery(this)); // STOP doesn't work
+
+      console.debug(widget);
+    });    
+  }
+
+  this.hide = function() {
+    that.removeHTMLContainer();
+  }
+}
+EcwidYotpoWidgets.Widget.call(EcwidYotpoWidgets.RatingListWidget.prototype);
+
+/*
  * EcwidYotpoWidgets.WidgetsFactory module: Factory of widgets
  */
 EcwidYotpoWidgets.WidgetsFactory = (function(module) {
@@ -472,6 +543,10 @@ EcwidYotpoWidgets.WidgetsFactory = (function(module) {
 
       case EcwidYotpoWidgets.WIDGET_TYPES.rating:
         return new EcwidYotpoWidgets.RatingWidget(config);
+        break;
+
+      case EcwidYotpoWidgets.WIDGET_TYPES.ratinglist:
+        return new EcwidYotpoWidgets.RatingListWidget(config);
         break;
      
       default:
@@ -598,7 +673,8 @@ EcwidYotpoWidgets.Log.Console = (function(module) {
 EcwidYotpoWidgets.WIDGET_TYPES = (function(module) {
   var _module = {    
     reviews: "reviews",
-    rating: "rating"
+    rating: "rating",
+    ratinglist: "ratinglist"
   }
 
   return (EcwidYotpoWidgets.extend(module, _module, true));
@@ -616,6 +692,7 @@ EcwidYotpoWidgets.DefaultConfig = (function(module) {
 
     reviews: {
       enabled: true,
+      pages: ['PRODUCT'],
       elmId: "ecwid_yotpo_reviews",      
       elmParentSelector: false, // widget's parent DOM element
       elmCssClass: "yotpo reviews",
@@ -625,8 +702,18 @@ EcwidYotpoWidgets.DefaultConfig = (function(module) {
 
     rating: {
       enabled: true,
+      pages: ['PRODUCT'],
       elmId: "ecwid_yotpo_rating",        
       elmParentSelector: ".ecwid-productBrowser-head", // widget's parent DOM element
+      elmCssClass: "yotpo bottomLine",
+      elmExtraCssClass: "",
+      advancedAttributes: {} // The list of custom data attributes
+    },
+
+    ratinglist: {
+      enabled: true,
+      pages: ['CATEGORY', 'SEARCH'],
+      elmParentSelector: ".ecwid-productBrowser-productNameLink", // widget's parent DOM element
       elmCssClass: "yotpo bottomLine",
       elmExtraCssClass: "",
       advancedAttributes: {} // The list of custom data attributes
