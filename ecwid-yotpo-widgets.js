@@ -1,7 +1,7 @@
 /*
  * Ecwid Yotpo Widgets v0.2beta
  * 
- * A script for Ecwid to display Yotpo widgets on product details pages
+ * A script for Ecwid to display Yotpo widgets on store pages
  *
  * Project web page: https://github.com/makfruit/ecwid_yotpo_widgets/
  * Ecwid shopping cart: http://www.ecwid.com
@@ -84,7 +84,6 @@ var EcwidYotpoWidgets = (function(module) {
     pageInfo = EcwidYotpoWidgets.EcwidApi.getEcwidPageInfo(ecwidPage);
 
     // Show widgets
-    console.debug(_activeWidgets);    
     for (var i = 0; i < _activeWidgets.length; i++) {
       if (_activeWidgets[i].isDisplayedOnPage(pageInfo.type)) {        
         _activeWidgets[i].show(pageInfo);
@@ -133,10 +132,15 @@ var EcwidYotpoWidgets = (function(module) {
         }
       ).prependTo("body");
 
-      // Attach widgets appearing to Ecwid page loading
+      // Hide widgets every time an Ecwid page loads
       EcwidYotpoWidgets.EcwidApi.attachPageLoadedHandler(_hideWidgets);
-      EcwidYotpoWidgets.EcwidApi.attachPageLoadedHandler(_showWidgets, ['PRODUCT','CATEGORY']);
-      //EcwidYotpoWidgets.EcwidApi.attachPageLoadedHandler(_showProductListPageWidgets, 'CATEGORY');
+
+      // Show widgets on products pages
+      EcwidYotpoWidgets.EcwidApi.attachPageLoadedHandler(_showWidgets, 'PRODUCT');
+
+      // Show widgets on category pages. 
+      // (Ecwid refreshing its layout on product listing pages after loading hence the 500 ms delay as a workaround)
+      EcwidYotpoWidgets.EcwidApi.attachPageLoadedHandler(_showWidgets, ['CATEGORY','SEARCH'], 500); 
     }
   }
 
@@ -316,7 +320,7 @@ EcwidYotpoWidgets.EcwidApi = (function(module) {
   /*
    * Attach a handler to Ecwid.OnPageLoaded event
    */
-  var _attachPageLoadedHandler = function(callback, pageType) {    
+  var _attachPageLoadedHandler = function(callback, pageType, delay) {    
     var handler;    
     if (pageType) {
       if (!jQuery.isArray(pageType)) {
@@ -335,7 +339,18 @@ EcwidYotpoWidgets.EcwidApi = (function(module) {
     }
     
     Ecwid.OnPageLoaded.add(function(page) {
-      handler(page);      
+      if (delay) {
+        // Add delay if needed
+        setTimeout(
+          function() {
+            handler(page);
+          }, 
+          delay
+        );
+
+      } else {
+        handler(page);
+      }
     });
   }
 
@@ -488,19 +503,18 @@ EcwidYotpoWidgets.RatingListWidget = function(config) {
    * Remove widget HTML containers [override]
    */
   this.removeHTMLContainer = function() {
-    jQuery("[class='" + this.getCssClass() + "']").remove();  // dbg    
+    jQuery("[class='" + this.getCssClass() + "']").remove();
   }
 
   var that = this;
-  this.show = function(pageInfo) {    
-    jQuery("div.ecwid-productBrowser-productNameLink").each(function() { // dbg const
+  this.show = function(pageInfo) {
+    jQuery(that.widgetConfig.elmParentSelector).each(function() {
       // Get product ID from the link      
       var productID = jQuery(this).find('a').attr('href').match(/id=(\d+)/)[1];
 
-      //
       // Prepare data attributes for the widget's HTML element
       // Basic information
-      var elmAttributes = { // dbg code duplicate
+      var elmAttributes = { // dbg code duplicate: the abstract widget needs to be redone
         "class": that.getCssClass(),
         "data-appkey": that.globalConfig.yotpoAppKey,        
         "data-product-id": productID
@@ -511,10 +525,8 @@ EcwidYotpoWidgets.RatingListWidget = function(config) {
     
       // Create an HTML container for star rating
       var widget = jQuery("<div/>").attr(elmAttributes);
-      widget.insertAfter(jQuery(this)); // STOP doesn't work
-
-      console.debug(widget);
-    });    
+      widget.insertAfter(jQuery(this));
+    });
   }
 
   this.hide = function() {
@@ -713,7 +725,7 @@ EcwidYotpoWidgets.DefaultConfig = (function(module) {
     ratinglist: {
       enabled: true,
       pages: ['CATEGORY', 'SEARCH'],
-      elmParentSelector: ".ecwid-productBrowser-productNameLink", // widget's parent DOM element
+      elmParentSelector: "div.ecwid-productBrowser-productNameLink", // widget's parent DOM element
       elmCssClass: "yotpo bottomLine",
       elmExtraCssClass: "",
       advancedAttributes: {} // The list of custom data attributes
