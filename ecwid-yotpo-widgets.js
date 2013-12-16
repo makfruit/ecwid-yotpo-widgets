@@ -139,8 +139,12 @@ var EcwidYotpoWidgets = (function(module) {
       EcwidYotpoWidgets.EcwidApi.attachPageLoadedHandler(_showWidgets, 'PRODUCT');
 
       // Show widgets on category pages. 
-      // (Ecwid refreshing its layout on product listing pages after loading hence the 500 ms delay as a workaround)
-      EcwidYotpoWidgets.EcwidApi.attachPageLoadedHandler(_showWidgets, ['CATEGORY','SEARCH'], 500); 
+      // (Ecwid refreshes its layout on product listing pages after loading hence the delay as a workaround)
+      EcwidYotpoWidgets.EcwidApi.attachPageLoadedHandler(
+        _showWidgets, 
+        ['CATEGORY','SEARCH'], 
+        _config.productListUpdateDelay
+      ); 
     }
   }
 
@@ -287,8 +291,7 @@ EcwidYotpoWidgets.EcwidApi = (function(module) {
           'imageUrl': jQuery('.ecwid-productBrowser-details-thumbnail > img').attr('src'),      
           'title': jQuery('.ecwid-productBrowser-head').text(),
           'descr': jQuery('.ecwid-productBrowser-details-descr').text(),
-          'models': "", // no such data
-          'id': ecwidPage.productId,
+          'models': "", // no such data          
           'domain': document.domain, 
           'url': window.location.href,
           'breadcrumbs': _getBreadcrumbs()
@@ -375,48 +378,25 @@ EcwidYotpoWidgets.Widget = (function(module) {
     return (jQuery.inArray(pageType, this.widgetConfig.pages) > -1);
   }
 
-  module.createHTMLContainer = function(pageInfo) {    
+  module.createGenericHTMLContainer = function() {    
     // Here, 'this' refers to child class    
 
     // Prepare data attributes for the widget's HTML element
     // Basic information
-    var elmAttributes = {
-      "id": this.widgetConfig.elmId,
+    var elmAttributes = {      
       "class": this.getCssClass(),
-      "data-appkey": this.globalConfig.yotpoAppKey,
-      "data-domain": pageInfo.domain,
-      "data-product-id": pageInfo.id,
-      "data-product-models": pageInfo.models,
-      "data-name": this.escapeText(pageInfo.title),
-      "data-url": pageInfo.url,
-      "data-image-url": pageInfo.imageUrl,
-      "data-description": this.escapeText(pageInfo.descr),
-      "data-bread-crumbs": this.escapeText(pageInfo.breadcrumbs)
+      "data-appkey": this.globalConfig.yotpoAppKey      
     };
 
-    // Advanced information. For the details, see http://support.yotpo.com/entries/21732922-Advanced-Widget-Customization    
+    // Advanced information
     EcwidYotpoWidgets.extend(elmAttributes, this.widgetConfig.advancedAttributes);    
   
-    // Create an empty div with the defined above attributes
-    var widgetElement = jQuery("<div/>").attr(elmAttributes);
-
-    return widgetElement;  
-  }
-
-  module.removeHTMLContainer = function() {
-    jQuery('#' + this.widgetConfig.elmId).remove(); 
+    // Create and return an empty div with the defined above attributes
+    return jQuery("<div/>").attr(elmAttributes);
   }
 
   module.getCssClass = function () {
     return this.widgetConfig.elmCssClass + " " + this.widgetConfig.elmExtraCssClass;
-  }
-
-  module.escapeUrl = function(url) {
-    return encodeURIComponent(url);
-  }
-
-  module.escapeText = function(text) {    
-    return EcwidYotpoWidgets.EcwidApi.truncateProductDescription(text, this.globalConfig.productDescrMaxLength);
   }
 
   /*
@@ -443,20 +423,31 @@ EcwidYotpoWidgets.ReviewsWidget = function(config) {
   this.globalConfig = config;
   this.widgetConfig = config[this.widgetType];
 
-  var that = this;
   this.show = function(pageInfo) {
-    that.removeHTMLContainer();
-    var widgetElement = that.createHTMLContainer(pageInfo);
+    var widgetElement = this.createGenericHTMLContainer();
+    
+    // Set page reviews attributes
+    widgetElement.attr({
+      "id": this.widgetConfig.elmId,      
+      "data-domain": pageInfo.domain,      
+      "data-product-id": pageInfo.productId,
+      "data-product-models": pageInfo.models,
+      "data-name": this.escapeText(pageInfo.title),
+      "data-url": pageInfo.url,
+      "data-image-url": pageInfo.imageUrl,
+      "data-description": this.escapeText(pageInfo.descr),
+      "data-bread-crumbs": this.escapeText(pageInfo.breadcrumbs)
+    });
 
     // Find the element which the reviews widget should be placed after
     var parentElement;
     if (this.widgetConfig.elmParentSelector) {
       // Parent element is set in the config
-      parentElement = jQuery(that.widgetConfig.elmParentSelector);
+      parentElement = jQuery(this.widgetConfig.elmParentSelector);
 
     } else {
       // Find the closest product browser's wrapper with 'ecwid' class
-      parentElement = jQuery("." + that.globalConfig.ecwidProductBrowserCssClass).closest('.ecwid');
+      parentElement = jQuery("." + this.globalConfig.ecwidProductBrowserCssClass).closest('.ecwid');
     }
 
     // Insert widget's container into the current page
@@ -464,8 +455,13 @@ EcwidYotpoWidgets.ReviewsWidget = function(config) {
   }
 
   this.hide = function() {
-    that.removeHTMLContainer();
+    jQuery('#' + this.widgetConfig.elmId).remove();
   }
+
+  this.escapeText = function(text) {    
+    return EcwidYotpoWidgets.EcwidApi.truncateProductDescription(text, this.globalConfig.productDescrMaxLength);
+  }
+
 }
 EcwidYotpoWidgets.Widget.call(EcwidYotpoWidgets.ReviewsWidget.prototype);
 
@@ -476,16 +472,18 @@ EcwidYotpoWidgets.RatingWidget = function(config) {
   this.widgetType = 'rating';
   this.globalConfig = config;
   this.widgetConfig = config[this.widgetType];
-
-  var that = this;
-  this.show = function(pageInfo) {
-    that.removeHTMLContainer();
-    var widgetElement = that.createHTMLContainer(pageInfo);
-    widgetElement.insertAfter(that.widgetConfig.elmParentSelector);
+  
+  this.show = function(pageInfo) {    
+    var widgetElement = this.createGenericHTMLContainer();
+    widgetElement.attr({
+      "id": this.widgetConfig.elmId,      
+      "data-product-id": pageInfo.productId
+    });
+    widgetElement.insertAfter(this.widgetConfig.elmParentSelector);
   }
 
   this.hide = function() {
-    that.removeHTMLContainer();
+    jQuery('#' + this.widgetConfig.elmId).remove();
   }
 }
 EcwidYotpoWidgets.Widget.call(EcwidYotpoWidgets.RatingWidget.prototype);
@@ -506,31 +504,25 @@ EcwidYotpoWidgets.RatingListWidget = function(config) {
     jQuery("[class='" + this.getCssClass() + "']").remove();
   }
 
-  var that = this;
   this.show = function(pageInfo) {
-    jQuery(that.widgetConfig.elmParentSelector).each(function() {
+    var that = this;
+    jQuery(this.widgetConfig.elmParentSelector).each(function() {
       // Get product ID from the link      
       var productID = jQuery(this).find('a').attr('href').match(/id=(\d+)/)[1];
 
-      // Prepare data attributes for the widget's HTML element
-      // Basic information
-      var elmAttributes = { // dbg code duplicate: the abstract widget needs to be redone
-        "class": that.getCssClass(),
-        "data-appkey": that.globalConfig.yotpoAppKey,        
-        "data-product-id": productID
-      };
+      // Create an HTML container for star rating widget
+      var widgetElement = that.createGenericHTMLContainer();
 
-      // Advanced information. For the details, see http://support.yotpo.com/entries/21732922-Advanced-Widget-Customization    
-      EcwidYotpoWidgets.extend(elmAttributes, that.widgetConfig.advancedAttributes);    
-    
-      // Create an HTML container for star rating
-      var widget = jQuery("<div/>").attr(elmAttributes);
-      widget.insertAfter(jQuery(this));
+      // Assign widget-specific data attributes to the widget's HTML element
+      widgetElement.attr({
+        "data-product-id": productID
+      });
+      widgetElement.insertAfter(jQuery(this));
     });
   }
 
   this.hide = function() {
-    that.removeHTMLContainer();
+    jQuery("[class='" + this.getCssClass() + "']").remove();
   }
 }
 EcwidYotpoWidgets.Widget.call(EcwidYotpoWidgets.RatingListWidget.prototype);
@@ -701,6 +693,7 @@ EcwidYotpoWidgets.DefaultConfig = (function(module) {
     yotpoAppKey: '',
     productDescrMaxLength: 300,
     ecwidProductBrowserCssClass: "ecwid-productBrowser",
+    productListUpdateDelay: 500, // in ms
 
     reviews: {
       enabled: true,
