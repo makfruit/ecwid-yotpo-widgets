@@ -128,7 +128,7 @@ var EcwidYotpoWidgets = (function(module) {
         "<div></div>", 
         {
           "class": "yotpo",
-          "display": "none"
+          "style": "display: none;"
         }
       ).prependTo("body");
 
