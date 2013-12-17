@@ -378,7 +378,7 @@ EcwidYotpoWidgets.Widget = (function(module) {
     return (jQuery.inArray(pageType, this.widgetConfig.pages) > -1);
   }
 
-  module.createGenericHTMLContainer = function() {    
+  module.createHTMLContainer = function(addAttributes) {    
     // Here, 'this' refers to child class    
 
     // Prepare data attributes for the widget's HTML element
@@ -388,8 +388,11 @@ EcwidYotpoWidgets.Widget = (function(module) {
       "data-appkey": this.globalConfig.yotpoAppKey      
     };
 
+    // Widget-specific and page-specific attributes
+    EcwidYotpoWidgets.extend(elmAttributes, addAttributes);
+
     // Advanced information
-    EcwidYotpoWidgets.extend(elmAttributes, this.widgetConfig.advancedAttributes);    
+    EcwidYotpoWidgets.extend(elmAttributes, this.widgetConfig.advancedAttributes);
   
     // Create and return an empty div with the defined above attributes
     return jQuery("<div/>").attr(elmAttributes);
@@ -424,10 +427,8 @@ EcwidYotpoWidgets.ReviewsWidget = function(config) {
   this.widgetConfig = config[this.widgetType];
 
   this.show = function(pageInfo) {
-    var widgetElement = this.createGenericHTMLContainer();
-    
-    // Set page reviews attributes
-    widgetElement.attr({
+    // Create an HTML element for the widget and set attributes for it
+    var widgetElement = this.createHTMLContainer({
       "id": this.widgetConfig.elmId,      
       "data-domain": pageInfo.domain,      
       "data-product-id": pageInfo.productId,
@@ -473,12 +474,14 @@ EcwidYotpoWidgets.RatingWidget = function(config) {
   this.globalConfig = config;
   this.widgetConfig = config[this.widgetType];
   
-  this.show = function(pageInfo) {    
-    var widgetElement = this.createGenericHTMLContainer();
-    widgetElement.attr({
+  this.show = function(pageInfo) {
+    // Create an HTML element for the widget and set attributes for it
+    var widgetElement = this.createHTMLContainer({
       "id": this.widgetConfig.elmId,      
       "data-product-id": pageInfo.productId
     });
+    
+    // Insert widget into the page
     widgetElement.insertAfter(this.widgetConfig.elmParentSelector);
   }
 
@@ -510,13 +513,12 @@ EcwidYotpoWidgets.RatingListWidget = function(config) {
       // Get product ID from the link      
       var productID = jQuery(this).find('a').attr('href').match(/id=(\d+)/)[1];
 
-      // Create an HTML container for star rating widget
-      var widgetElement = that.createGenericHTMLContainer();
-
-      // Assign widget-specific data attributes to the widget's HTML element
-      widgetElement.attr({
+      // Create an HTML container for star rating widget and sett attributes for it
+      var widgetElement = that.createHTMLContainer({
         "data-product-id": productID
       });
+
+      // Insert widget into the page
       widgetElement.insertAfter(jQuery(this));
     });
   }
