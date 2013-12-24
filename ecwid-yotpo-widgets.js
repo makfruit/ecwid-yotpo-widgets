@@ -79,7 +79,7 @@ var EcwidYotpoWidgets = (function(module) {
   /*
    * Prepare and show widgets on the current page
    */
-  function _showWidgets(ecwidPage) {    
+  function _showWidgets(ecwidPage) {
     // Get the current page information    
     pageInfo = EcwidYotpoWidgets.EcwidApi.getEcwidPageInfo(ecwidPage);
 
@@ -195,6 +195,7 @@ var EcwidYotpoWidgets = (function(module) {
 EcwidYotpoWidgets.Loader = (function(module) {
   var _scripts = [];
   var _numScripts = 0;
+  var _isCompleteCallbackFired = false;
 
   // Final callback (called after all the scripts are loaded)
   var _completeCallback = function() {};  
@@ -203,9 +204,23 @@ EcwidYotpoWidgets.Loader = (function(module) {
    * Callback on script loading
    */
   function _onScriptLoaded() {
-    if (--_numScripts <= 0) {
+
+    if (
+      !_isCompleteCallbackFired
+      && --_numScripts <= 0
+    ) {
+      _isCompleteCallbackFired = true;
       _completeCallback();
     }
+  }
+
+  /* 
+   * Detects if the script file is loaded by script.readyState
+   * Copied from: https://github.com/SlexAxton/yepnope.js
+   */
+  function isFileReady (readyState) {
+    // Check to see if any of the ways a file can be ready are available as properties on the file's element
+    return ( ! readyState || readyState == "loaded" || readyState == "complete" || readyState == "uninitialized" );
   }
 
   /*
@@ -216,9 +231,15 @@ EcwidYotpoWidgets.Loader = (function(module) {
     script.setAttribute("src", src);
     script.charset = "utf-8";
     script.setAttribute("type", "text/javascript");
-    script.onreadystatechange = script.onload = callback;
+    script.onreadystatechange = script.onload = function() {
+      if (isFileReady(script.readyState)) {
+        callback();
+      }
+    }
     document.body.appendChild(script);
   }
+
+
 
   /*
    * Load all dependencies
