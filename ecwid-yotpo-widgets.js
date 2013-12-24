@@ -1,5 +1,5 @@
 /*
- * Ecwid Yotpo Widgets v0.2beta
+ * Ecwid Yotpo Widgets v0.2.1beta
  * 
  * A script for Ecwid to display Yotpo widgets on store pages
  *
