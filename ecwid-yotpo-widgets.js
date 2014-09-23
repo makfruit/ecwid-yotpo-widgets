@@ -1,5 +1,5 @@
 /*
- * Ecwid Yotpo Widgets v0.2.1beta
+ * Ecwid Yotpo Widgets v0.3.0
  * 
  * A script for Ecwid to display Yotpo widgets on store pages
  *
@@ -91,7 +91,8 @@ var EcwidYotpoWidgets = (function(module) {
     }
 
     // Initialize Yotpo
-    window.yQuery(".yotpo").yotpo();
+    window.yotpo.initialized = false;
+    window.yotpo.init();
   }
 
   /*
@@ -119,19 +120,6 @@ var EcwidYotpoWidgets = (function(module) {
     
     // Initialize widgets    
     if (_isEnabled()) {
-      // Define Yotpo app key on the page
-      window.yotpo_app_key = _config.yotpoAppKey;
-
-      // Create an empty .yotpo div - a workaround for the strange Yotpo behavior:
-      // without it Yotpo doesn't load the first widget on the page
-      jQuery(
-        "<div></div>", 
-        {
-          "class": "yotpo",
-          "style": "display: none;"
-        }
-      ).prependTo("body");
-
       // Hide widgets every time an Ecwid page loads
       EcwidYotpoWidgets.EcwidApi.attachPageLoadedHandler(_hideWidgets);
 
@@ -169,8 +157,8 @@ var EcwidYotpoWidgets = (function(module) {
           sources: ['//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js']
         },
         {
-          test: window.yQuery,
-          sources: ['//www.yotpo.com/js/yQuery.js']
+          test: window.yotpo,
+          sources: ['//w2.yotpo.com/' + _config.yotpoAppKey + '/widget.js']
         }       
       ],
       _start
@@ -405,8 +393,7 @@ EcwidYotpoWidgets.Widget = (function(module) {
     // Prepare data attributes for the widget's HTML element
     // Basic information
     var elmAttributes = {      
-      "class": this.getCssClass(),
-      "data-appkey": this.globalConfig.yotpoAppKey      
+      "class": this.getCssClass()
     };
 
     // Widget-specific and page-specific attributes
@@ -532,7 +519,7 @@ EcwidYotpoWidgets.RatingListWidget = function(config) {
     var that = this;
     jQuery(this.widgetConfig.elmParentSelector).each(function() {
       // Get product ID from the link      
-      var productID = jQuery(this).find('a').attr('href').match(/id=(\d+)/)[1];
+      var productID = jQuery(this).find('a').attr('href').match(/\/p\/(\d+)\//)[1];
 
       // Create an HTML container for star rating widget and sett attributes for it
       var widgetElement = that.createHTMLContainer({
@@ -723,7 +710,7 @@ EcwidYotpoWidgets.DefaultConfig = (function(module) {
       pages: ['PRODUCT'],
       elmId: "ecwid_yotpo_reviews",      
       elmParentSelector: false, // widget's parent DOM element
-      elmCssClass: "yotpo reviews",
+      elmCssClass: "yotpo yotpo-main-widget",
       elmExtraCssClass: "",
       advancedAttributes: {} // The list of custom data attributes
     },

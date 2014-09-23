@@ -1,3 +1,6 @@
+##0.3.0
+- Updated plugin to work with Yotpo Widgets V2
+
 ##0.2.1beta
 - Fixed: widgets doubling in IE8, IE9 browsers
 
