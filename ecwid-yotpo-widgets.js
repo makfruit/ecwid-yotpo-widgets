@@ -70,6 +70,23 @@ var EcwidYotpoWidgets = (function(module) {
   }
 
   /*
+   * Load configurations
+   */
+  function _loadConfig(callback) {
+    var script = document.createElement("script");
+    script.setAttribute("src", '//s3.amazonaws.com/yotpo-plugins/ecwid/config/' + Ecwid.getOwnerId() + '.js');
+    script.charset = "utf-8";
+    script.setAttribute("type", "text/javascript");
+    script.onreadystatechange = script.onload = function() {
+      if (!this.readyState || this.readyState == 'complete') {
+        _setConfig(window.yotpoConfigs);
+        callback.call();
+      }
+    }
+    document.body.appendChild(script);
+  }
+
+  /*
    * Check whether at least one widget is enabled
    */
   function _isEnabled() {
@@ -139,30 +156,23 @@ var EcwidYotpoWidgets = (function(module) {
   /*
    * The main function: set configuration, initialize and show widgets
    */
-  function _load(config) {
-    // Check if Ecwid exists on the page
-    if (typeof (window.Ecwid) != 'object') {
-      EcwidYotpoWidgets.Log.err(EcwidYotpoWidgets.Messages.ERR_NO_ECWID_ON_PAGE);
-      return false;
-    }
-
-    // Set configuration
-    _setConfig(config);
-
-    // Load dependencies and init widgets
-    EcwidYotpoWidgets.Loader.load(
-      [
-        {
-          test: window.jQuery,
-          sources: ['//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js']
-        },
-        {
-          test: window.yotpo,
-          sources: ['//w2.yotpo.com/' + _config.yotpoAppKey + '/widget.js']
-        }       
-      ],
-      _start
-    );
+  function _load() {
+    _loadConfig(function() {
+      // Load dependencies and init widgets
+      EcwidYotpoWidgets.Loader.load(
+        [
+          {
+            test: window.jQuery,
+            sources: ['//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js']
+          },
+          {
+            test: window.yotpo,
+            sources: ['//w2.yotpo.com/' + _config.yotpoAppKey + '/widget.js']
+          }
+        ],
+        _start
+      );
+    });
   }
 
   // Public
@@ -754,3 +764,12 @@ EcwidYotpoWidgets.Messages = (function(module) {
   return (EcwidYotpoWidgets.extend(module, _module, true));
 
 }(EcwidYotpoWidgets.Messages || {}));
+
+// Check if Ecwid exists on the page
+if (typeof (window.Ecwid) != 'object') {
+  EcwidYotpoWidgets.Log.err(EcwidYotpoWidgets.Messages.ERR_NO_ECWID_ON_PAGE);
+} else {
+  Ecwid.OnAPILoaded.add(function() {
+    EcwidYotpoWidgets.load();
+  });
+}
