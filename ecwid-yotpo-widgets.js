@@ -78,7 +78,7 @@ var EcwidYotpoWidgets = (function(module) {
     script.charset = "utf-8";
     script.setAttribute("type", "text/javascript");
     script.onreadystatechange = script.onload = function() {
-      if (!this.readyState || this.readyState == 'complete') {
+      if (window.yotpoConfigs) {
         _setConfig(window.yotpoConfigs);
         callback.call();
       }
