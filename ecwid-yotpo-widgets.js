@@ -340,7 +340,7 @@ EcwidYotpoWidgets.EcwidApi = (function(module) {
   }
 
   /*
-   * Attach a handler to Ecwid.OnPageLoaded event
+   * Attach a handler to EcwidYotpoWidgets.EcwidApi.OnPageLoaded event
    */
   var _attachPageLoadedHandler = function(callback, pageType, delay) {    
     var handler;    
@@ -360,7 +360,7 @@ EcwidYotpoWidgets.EcwidApi = (function(module) {
       };
     }
     
-    Ecwid.OnPageLoaded.add(function(page) {
+    EcwidYotpoWidgets.EcwidApi.OnPageLoaded.add(function(page) {
       if (delay) {
         // Add delay if needed
         setTimeout(
@@ -376,13 +376,53 @@ EcwidYotpoWidgets.EcwidApi = (function(module) {
     });
   }
 
+  /**
+   * Provides a functionality for on page loaded event
+   */
+  var _OnPageLoaded = (function(module) {
+    /**
+     * Private variables
+     */
+    var currentPage = null;
+    var callbacks = [];
+
+    /**
+     * Trigger on page loaded event
+     */
+    var _trigger = function(page) {
+      currentPage = page;
+      callbacks.forEach(function(callback) {
+        callback(page);
+      });
+    }
+
+    /**
+     * Add callbacks to event
+     */
+    var _add = function(callback) {
+      callbacks.push(callback);
+      if (currentPage) {
+        callback(currentPage);
+      }
+    }
+
+    return (EcwidYotpoWidgets.extend(
+      module,
+      {
+        trigger: _trigger,
+        add: _add
+      }
+    ));
+  })({});
+
   // Public
   return (EcwidYotpoWidgets.extend(
     module,
     {
       attachPageLoadedHandler: _attachPageLoadedHandler,
       truncateProductDescription: _truncateProductDescription,
-      getEcwidPageInfo: _getEcwidPageInfo
+      getEcwidPageInfo: _getEcwidPageInfo,
+      OnPageLoaded: _OnPageLoaded
     }
   ));
 
@@ -533,7 +573,8 @@ EcwidYotpoWidgets.RatingListWidget = function(config) {
 
       // Create an HTML container for star rating widget and sett attributes for it
       var widgetElement = that.createHTMLContainer({
-        "data-product-id": productID
+        "data-product-id": productID,
+        "data-skip-average-score": true
       });
 
       // Insert widget into the page
@@ -771,5 +812,8 @@ if (typeof (window.Ecwid) != 'object') {
 } else {
   Ecwid.OnAPILoaded.add(function() {
     EcwidYotpoWidgets.load();
+  });
+  Ecwid.OnPageLoaded.add(function(page) {
+    EcwidYotpoWidgets.EcwidApi.OnPageLoaded.trigger(page);
   });
 }
