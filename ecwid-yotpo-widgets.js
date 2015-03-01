@@ -108,8 +108,7 @@ var EcwidYotpoWidgets = (function(module) {
     }
 
     // Initialize Yotpo
-    window.yotpo.initialized = false;
-    window.yotpo.init();
+    window.yotpo.initWidgets();
   }
 
   /*
