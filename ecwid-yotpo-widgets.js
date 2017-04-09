@@ -568,7 +568,7 @@ EcwidYotpoWidgets.RatingListWidget = function(config) {
     var that = this;
     jQuery(this.widgetConfig.elmParentSelector).each(function() {
       // Get product ID from the link      
-      var productID = jQuery(this).find('a').attr('href').match(/\/p\/(\d+)\//)[1];
+      var productID = jQuery(this).find('a').attr('href').match("\/shop\/.+-p(.+)")[1];
 
       // Create an HTML container for star rating widget and sett attributes for it
       var widgetElement = that.createHTMLContainer({
