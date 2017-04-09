@@ -9,12 +9,12 @@
 </div>
 <!-- END Ecwid integration code -->
 
-<!-- Yotpo-Ecwid integration script. Here, place the actual path to the 'EcwidYotpoWidgets.js' file on your site -->
-<script type="text/javascript" src="EcwidYotpoWidgets.js" charset="utf-8"></script>
+<!-- Yotpo-Ecwid integration script. Here, place the actual path to the 'ecwid-yotpo-widgets.js' file on your site -->
+<script type="text/javascript" src="ecwid-yotpo-widgets.js" charset="utf-8"></script>
 
 <script>
 /* 
- * Default use case - initialize widgets with given Yotpo Applicatoin Key
+ * Default use case - initialize widgets with given Yotpo Applicatoin Key (all three widgets are enabled by default)
  */
 EcwidYotpoWidgets.load({
   yotpoAppKey: '6NtDKLAI5K4Gz3zfWB1xy0E52zeSTWBjf9UbSnxy' // Place your Yotpo app key here
@@ -22,12 +22,12 @@ EcwidYotpoWidgets.load({
 
 
 /* 
- * Disable Yotpo Bottom Line widget (show only reviews)
+ * Disable Yotpo Bottom Line widget on product details pages (show only reviews and star rating in the list)
  */
 /*
 EcwidYotpoWidgets.load({
   yotpoAppKey: '6NtDKLAI5K4Gz3zfWB1xy0E52zeSTWBjf9UbSnxy', // Place your Yotpo app key here
-  bottomline: {
+  rating: {
     enabled: false
   }
 });
@@ -49,9 +49,14 @@ EcwidYotpoWidgets.load({
       "data-texts-post": "Submit"      
     }
   },
-  bottomline: {
+  rating: {
     advancedAttributes: {
       "data-texts-firstreview": "Be the first to review this product" // Displays the text when there is no reviews
+    }
+  },
+  ratinglist: {
+    advancedAttributes: {
+      "data-images-star_full": "http://www.ecwid.com/forums/images/smilies/ecwid_16_round.gif" // Change the default star image
     }
   }
 });
